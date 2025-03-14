@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <iomanip>
+#include <set>
 
 using namespace std;
 
@@ -18,39 +21,69 @@ public:
 
 class Grades {
 private:
-    map<string, int> disciplineGrades;
+    map<string, vector<int>> disciplineGrades; // Изменено на вектор баллов для накопления
 
 public:
-    void setGrade(const string& discipline, int grade) {
-        disciplineGrades[discipline] = grade;
+    // Добавление нового балла к дисциплине
+    void addGrade(const string& discipline, int grade) {
+        disciplineGrades[discipline].push_back(grade);
     }
 
-    int getGrade(const string& discipline) const {
+    // Получение всех баллов по дисциплине
+    vector<int> getAllGrades(const string& discipline) const {
         auto it = disciplineGrades.find(discipline);
         if (it != disciplineGrades.end()) {
             return it->second;
         }
+        return {};
+    }
+
+    // Получение суммарного балла по дисциплине
+    int getGrade(const string& discipline) const {
+        auto it = disciplineGrades.find(discipline);
+        if (it != disciplineGrades.end()) {
+            int sum = 0;
+            for (int grade : it->second) {
+                sum += grade;
+            }
+            return sum;
+        }
         return 0;
     }
 
+    // Получение суммарного балла по всем дисциплинам
     int getTotalGrade() const {
         int total = 0;
-        for (const auto& [discipline, grade] : disciplineGrades) {
-            total += grade;
+        for (const auto& [discipline, grades] : disciplineGrades) {
+            for (int grade : grades) {
+                total += grade;
+            }
         }
         return total;
     }
 
+    // Получение среднего балла
     double getAverageGrade() const {
-        if (disciplineGrades.empty()) {
+        int totalGrades = 0;
+        int totalSum = 0;
+        
+        for (const auto& [discipline, grades] : disciplineGrades) {
+            for (int grade : grades) {
+                totalSum += grade;
+                totalGrades++;
+            }
+        }
+        
+        if (totalGrades == 0) {
             return 0.0;
         }
-        return static_cast<double>(getTotalGrade()) / disciplineGrades.size();
+        return static_cast<double>(totalSum) / totalGrades;
     }
 
+    // Получение списка дисциплин
     vector<string> getDisciplines() const {
         vector<string> disciplines;
-        for (const auto& [discipline, grade] : disciplineGrades) {
+        for (const auto& [discipline, _] : disciplineGrades) {
             disciplines.push_back(discipline);
         }
         return disciplines;
@@ -75,8 +108,19 @@ public:
     string getGroup() const override {return group;}
     void setGroup(const string& group) override {this->group = group;}
 
+    // Добавление нового балла (накопительно)
+    void addGrade(const string& discipline, int grade) {
+        grades.addGrade(discipline, grade);
+    }
+
+    // Получение всех баллов по дисциплине
+    vector<int> getAllGrades(const string& discipline) const {
+        return grades.getAllGrades(discipline);
+    }
+
+    // Совместимость с предыдущим интерфейсом
     void setGrade(const string& discipline, int grade) {
-        grades.setGrade(discipline, grade);
+        grades.addGrade(discipline, grade);
     }
 
     int getGrade(const string& discipline) const {
@@ -143,6 +187,44 @@ public:
         }
         return static_cast<double>(totalGrade) / students.size();
     }
+
+    // Вывод детальной информации о баллах группы
+    void printDetailedGrades() const {
+        cout << "\n=== ДЕТАЛЬНАЯ ИНФОРМАЦИЯ О БАЛЛАХ ГРУППЫ " << groupName << " ===" << endl;
+        
+        // Собираем все дисциплины
+        set<string> allDisciplines;
+        for (const auto& student : students) {
+            for (const auto& discipline : student->getGrades().getDisciplines()) {
+                allDisciplines.insert(discipline);
+            }
+        }
+        
+        // Для каждой дисциплины выводим баллы всех студентов
+        for (const auto& discipline : allDisciplines) {
+            cout << "\nДисциплина: " << discipline << endl;
+            cout << "-------------------------------------------" << endl;
+            
+            for (const auto& student : students) {
+                vector<int> grades = student->getAllGrades(discipline);
+                if (!grades.empty()) {
+                    cout << student->getName() << ": ";
+                    
+                    // Выводим отдельные баллы
+                    for (size_t i = 0; i < grades.size(); ++i) {
+                        cout << grades[i];
+                        if (i < grades.size() - 1) {
+                            cout << " + ";
+                        }
+                    }
+                    
+                    // Выводим сумму
+                    int sum = student->getGrade(discipline);
+                    cout << " = " << sum << endl;
+                }
+            }
+        }
+    }
 };
 
 void student::setAge(int age)
@@ -162,17 +244,27 @@ int main() {
     s3.setName("Алексей");
     s3.setAge(19);
 
-    s1.setGrade("Математика", 85);
-    s1.setGrade("Программирование", 92);
-    s1.setGrade("Физика", 78);
+    // Накопительное добавление баллов
+    s1.addGrade("Математика", 45);
+    s1.addGrade("Математика", 40); // Дополнительные баллы
+    s1.addGrade("Программирование", 50);
+    s1.addGrade("Программирование", 42);
+    s1.addGrade("Физика", 38);
+    s1.addGrade("Физика", 40);
 
-    s2.setGrade("Математика", 92);
-    s2.setGrade("Программирование", 88);
-    s2.setGrade("Физика", 90);
+    s2.addGrade("Математика", 47);
+    s2.addGrade("Математика", 45);
+    s2.addGrade("Программирование", 48);
+    s2.addGrade("Программирование", 40);
+    s2.addGrade("Физика", 44);
+    s2.addGrade("Физика", 46);
 
-    s3.setGrade("Математика", 75);
-    s3.setGrade("Программирование", 95);
-    s3.setGrade("Физика", 82);
+    s3.addGrade("Математика", 35);
+    s3.addGrade("Математика", 40);
+    s3.addGrade("Программирование", 50);
+    s3.addGrade("Программирование", 45);
+    s3.addGrade("Физика", 42);
+    s3.addGrade("Физика", 40);
 
     Group group("ИС-201");
     group.addStudent(&s1);
@@ -192,13 +284,55 @@ int main() {
         cout << "\nСтудент: " << s->getName() << endl;
         cout << "Возраст: " << s->getAge() << endl;
         cout << "Группа: " << s->getGroup() << endl;
-        cout << "Баллы:" << endl;
-        cout << "  Математика: " << s->getGrade("Математика") << endl;
-        cout << "  Программирование: " << s->getGrade("Программирование") << endl;
-        cout << "  Физика: " << s->getGrade("Физика") << endl;
+        cout << "Суммарные баллы:" << endl;
+        
+        vector<string> disciplines = {"Математика", "Программирование", "Физика"};
+        for (const auto& discipline : disciplines) {
+            vector<int> grades = s->getAllGrades(discipline);
+            cout << "  " << discipline << ": ";
+            
+            // Выводим отдельные баллы
+            for (size_t j = 0; j < grades.size(); ++j) {
+                cout << grades[j];
+                if (j < grades.size() - 1) {
+                    cout << " + ";
+                }
+            }
+            
+            // Выводим сумму
+            cout << " = " << s->getGrade(discipline) << endl;
+        }
+        
         cout << "Общий балл: " << s->getTotalGrade() << endl;
-        cout << "Средний балл: " << s->getAverageGrade() << endl;
+        cout << "Средний балл: " << fixed << setprecision(2) << s->getAverageGrade() << endl;
     }
-
-    return 0;
+    
+    // Выводим детальную информацию о баллах
+    group.printDetailedGrades();
+    
+    // Интерактивный ввод баллов
+    cout << "\n=== ДОБАВЛЕНИЕ НОВЫХ БАЛЛОВ ===" << endl;
+    cout << "Выберите студента (1-" << group.getStudentCount() << "): ";
+    int studentIndex;
+    cin >> studentIndex;
+    
+    if (studentIndex >= 1 && studentIndex <= static_cast<int>(group.getStudentCount())) {
+        student* s = group.getStudent(studentIndex - 1);
+        
+        cout << "Выберите дисциплину:" << endl;
+        cout << "1. Математика" << endl;
+        cout << "2. Программирование" << endl;
+        cout << "3. Физика" << endl;
+        cout << "Ваш выбор: ";
+        
+        int disciplineChoice;
+        cin >> disciplineChoice;
+        
+        string discipline;
+        switch (disciplineChoice) {
+            case 1: discipline = "Математика"; break;
+            case 2: discipline = "Программирование"; break;
+            case 3: discipline = "Физика"; break;
+        }
+    }
 }
