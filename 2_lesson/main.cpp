@@ -5,7 +5,6 @@
 
 using namespace std;
 
-// Интерфейс для студента
 class IStudent {
 public:
     virtual int getAge() const = 0;
@@ -17,27 +16,23 @@ public:
     virtual ~IStudent() {}
 };
 
-// Класс для хранения баллов по дисциплинам
 class Grades {
 private:
-    map<string, int> disciplineGrades; // Словарь: дисциплина -> балл
+    map<string, int> disciplineGrades;
 
 public:
-    // Добавить или обновить балл по дисциплине
     void setGrade(const string& discipline, int grade) {
         disciplineGrades[discipline] = grade;
     }
 
-    // Получить балл по дисциплине
     int getGrade(const string& discipline) const {
         auto it = disciplineGrades.find(discipline);
         if (it != disciplineGrades.end()) {
             return it->second;
         }
-        return 0; // Если дисциплина не найдена, возвращаем 0
+        return 0;
     }
 
-    // Получить общую сумму баллов
     int getTotalGrade() const {
         int total = 0;
         for (const auto& [discipline, grade] : disciplineGrades) {
@@ -46,7 +41,6 @@ public:
         return total;
     }
 
-    // Получить средний балл
     double getAverageGrade() const {
         if (disciplineGrades.empty()) {
             return 0.0;
@@ -54,7 +48,6 @@ public:
         return static_cast<double>(getTotalGrade()) / disciplineGrades.size();
     }
 
-    // Получить все дисциплины
     vector<string> getDisciplines() const {
         vector<string> disciplines;
         for (const auto& [discipline, grade] : disciplineGrades) {
@@ -64,20 +57,17 @@ public:
     }
 };
 
-// Класс, представляющий студента, реализующий интерфейс IStudent
 class student : public IStudent
 {
 private:
-    string name; // Имя студента
-    int age;     // Возраст студента
-    string group; // Группа студента
-    Grades grades; // Баллы студента по дисциплинам
+    string name;
+    int age;
+    string group;
+    Grades grades;
 
 public:
-    // Конструктор по умолчанию
     student() : name(""), age(0), group("") {}
 
-    // Геттеры и сеттеры
     int getAge() const override {return age;}
     void setAge(int age) override;
     string getName() const override {return name;}
@@ -85,7 +75,6 @@ public:
     string getGroup() const override {return group;}
     void setGroup(const string& group) override {this->group = group;}
 
-    // Методы для работы с баллами
     void setGrade(const string& discipline, int grade) {
         grades.setGrade(discipline, grade);
     }
@@ -107,38 +96,31 @@ public:
     }
 };
 
-// Класс группы студентов
 class Group {
 private:
     string groupName;
     vector<student*> students;
 
 public:
-    // Конструктор
     Group(const string& name) : groupName(name) {}
 
-    // Деструктор
     ~Group() {
         // Не удаляем студентов, так как они могут использоваться в других местах
     }
 
-    // Добавить студента в группу
     void addStudent(student* s) {
         students.push_back(s);
         s->setGroup(groupName);
     }
 
-    // Получить название группы
     string getName() const {
         return groupName;
     }
 
-    // Получить количество студентов в группе
     size_t getStudentCount() const {
         return students.size();
     }
 
-    // Получить студента по индексу
     student* getStudent(size_t index) {
         if (index < students.size()) {
             return students[index];
@@ -146,12 +128,10 @@ public:
         return nullptr;
     }
 
-    // Получить всех студентов
     const vector<student*>& getStudents() const {
         return students;
     }
 
-    // Рассчитать средний балл группы по дисциплине
     double getAverageGradeForDiscipline(const string& discipline) {
         if (students.empty()) {
             return 0.0;
@@ -165,45 +145,40 @@ public:
     }
 };
 
-// Реализация метода setAge для установки возраста
 void student::setAge(int age)
 {
-    this->age = age; // this указывает на текущий объект
+    this->age = age;
 }
 
 int main() {
-    // Создаем студентов
     student s1, s2, s3;
-    
+
     s1.setName("Иван");
     s1.setAge(20);
-    
+
     s2.setName("Мария");
     s2.setAge(21);
-    
+
     s3.setName("Алексей");
     s3.setAge(19);
 
-    // Устанавливаем баллы для студентов
     s1.setGrade("Математика", 85);
     s1.setGrade("Программирование", 92);
     s1.setGrade("Физика", 78);
-    
+
     s2.setGrade("Математика", 92);
     s2.setGrade("Программирование", 88);
     s2.setGrade("Физика", 90);
-    
+
     s3.setGrade("Математика", 75);
     s3.setGrade("Программирование", 95);
     s3.setGrade("Физика", 82);
 
-    // Создаем группу и добавляем студентов
     Group group("ИС-201");
     group.addStudent(&s1);
     group.addStudent(&s2);
     group.addStudent(&s3);
 
-    // Выводим информацию о группе
     cout << "Группа: " << group.getName() << endl;
     cout << "Количество студентов: " << group.getStudentCount() << endl;
     cout << "\nСредний балл группы по дисциплинам:" << endl;
@@ -211,7 +186,6 @@ int main() {
     cout << "Программирование: " << group.getAverageGradeForDiscipline("Программирование") << endl;
     cout << "Физика: " << group.getAverageGradeForDiscipline("Физика") << endl;
 
-    // Выводим информацию о студентах и их баллах
     cout << "\nИнформация о студентах:" << endl;
     for (size_t i = 0; i < group.getStudentCount(); i++) {
         student* s = group.getStudent(i);
