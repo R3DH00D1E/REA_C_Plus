@@ -1,166 +1,230 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <memory>
+#include <map>
 
 using namespace std;
 
-class Student {
-private:
-    string name;
-    int age;
-    string group;
+// Интерфейс для студента
+class IStudent {
 public:
-    Student(const string& name, int age) : name(name), age(age), group("") {}
-
-    int getAge() const { return age; }
-    string getName() const { return name; }
-    string getGroup() const { return group; }
-    void setGroup(const string& group) { this->group = group; }
+    virtual int getAge() const = 0;
+    virtual void setAge(int age) = 0;
+    virtual string getName() const = 0;
+    virtual void setName(const string& name) = 0;
+    virtual string getGroup() const = 0;
+    virtual void setGroup(const string& group) = 0;
+    virtual ~IStudent() {}
 };
 
+// Класс для хранения баллов по дисциплинам
+class Grades {
+private:
+    map<string, int> disciplineGrades; // Словарь: дисциплина -> балл
+
+public:
+    // Добавить или обновить балл по дисциплине
+    void setGrade(const string& discipline, int grade) {
+        disciplineGrades[discipline] = grade;
+    }
+
+    // Получить балл по дисциплине
+    int getGrade(const string& discipline) const {
+        auto it = disciplineGrades.find(discipline);
+        if (it != disciplineGrades.end()) {
+            return it->second;
+        }
+        return 0; // Если дисциплина не найдена, возвращаем 0
+    }
+
+    // Получить общую сумму баллов
+    int getTotalGrade() const {
+        int total = 0;
+        for (const auto& [discipline, grade] : disciplineGrades) {
+            total += grade;
+        }
+        return total;
+    }
+
+    // Получить средний балл
+    double getAverageGrade() const {
+        if (disciplineGrades.empty()) {
+            return 0.0;
+        }
+        return static_cast<double>(getTotalGrade()) / disciplineGrades.size();
+    }
+
+    // Получить все дисциплины
+    vector<string> getDisciplines() const {
+        vector<string> disciplines;
+        for (const auto& [discipline, grade] : disciplineGrades) {
+            disciplines.push_back(discipline);
+        }
+        return disciplines;
+    }
+};
+
+// Класс, представляющий студента, реализующий интерфейс IStudent
+class student : public IStudent
+{
+private:
+    string name; // Имя студента
+    int age;     // Возраст студента
+    string group; // Группа студента
+    Grades grades; // Баллы студента по дисциплинам
+
+public:
+    // Конструктор по умолчанию
+    student() : name(""), age(0), group("") {}
+
+    // Геттеры и сеттеры
+    int getAge() const override {return age;}
+    void setAge(int age) override;
+    string getName() const override {return name;}
+    void setName(const string& name) override {this->name = name;}
+    string getGroup() const override {return group;}
+    void setGroup(const string& group) override {this->group = group;}
+
+    // Методы для работы с баллами
+    void setGrade(const string& discipline, int grade) {
+        grades.setGrade(discipline, grade);
+    }
+
+    int getGrade(const string& discipline) const {
+        return grades.getGrade(discipline);
+    }
+
+    int getTotalGrade() const {
+        return grades.getTotalGrade();
+    }
+
+    double getAverageGrade() const {
+        return grades.getAverageGrade();
+    }
+
+    Grades& getGrades() {
+        return grades;
+    }
+};
+
+// Класс группы студентов
 class Group {
 private:
-    string name;
-    vector<shared_ptr<Student>> students;
+    string groupName;
+    vector<student*> students;
 
 public:
-    Group(const string& name) : name(name) {}
+    // Конструктор
+    Group(const string& name) : groupName(name) {}
 
-    string getName() const { return name; }
-
-    void addStudent(shared_ptr<Student> student) {
-        student->setGroup(name);
-        students.push_back(student);
+    // Деструктор
+    ~Group() {
+        // Не удаляем студентов, так как они могут использоваться в других местах
     }
 
-    void removeStudent(const string& studentName) {
-        for (auto it = students.begin(); it != students.end(); ++it) {
-            if ((*it)->getName() == studentName) {
-                students.erase(it);
-                return;
-            }
+    // Добавить студента в группу
+    void addStudent(student* s) {
+        students.push_back(s);
+        s->setGroup(groupName);
+    }
+
+    // Получить название группы
+    string getName() const {
+        return groupName;
+    }
+
+    // Получить количество студентов в группе
+    size_t getStudentCount() const {
+        return students.size();
+    }
+
+    // Получить студента по индексу
+    student* getStudent(size_t index) {
+        if (index < students.size()) {
+            return students[index];
         }
+        return nullptr;
     }
 
-    void displayStudents() const {
-        cout << "Группа: " << name << endl;
+    // Получить всех студентов
+    const vector<student*>& getStudents() const {
+        return students;
+    }
+
+    // Рассчитать средний балл группы по дисциплине
+    double getAverageGradeForDiscipline(const string& discipline) {
         if (students.empty()) {
-            cout << "Пусто\n" << endl;
-            return;
+            return 0.0;
         }
 
+        int totalGrade = 0;
         for (const auto& student : students) {
-            cout << "- " << student->getName() << ", " << student->getAge() << " лет" << endl;
+            totalGrade += student->getGrade(discipline);
         }
-        cout << endl;
+        return static_cast<double>(totalGrade) / students.size();
     }
 };
 
+// Реализация метода setAge для установки возраста
+void student::setAge(int age)
+{
+    this->age = age; // this указывает на текущий объект
+}
+
 int main() {
-    vector<Group> groups;
-    vector<shared_ptr<Student>> students;
+    // Создаем студентов
+    student s1, s2, s3;
+    
+    s1.setName("Иван");
+    s1.setAge(20);
+    
+    s2.setName("Мария");
+    s2.setAge(21);
+    
+    s3.setName("Алексей");
+    s3.setAge(19);
 
-    cout << "Введите количество групп: ";
-    int n;
-    cin >> n;
-    cin.ignore();
+    // Устанавливаем баллы для студентов
+    s1.setGrade("Математика", 85);
+    s1.setGrade("Программирование", 92);
+    s1.setGrade("Физика", 78);
+    
+    s2.setGrade("Математика", 92);
+    s2.setGrade("Программирование", 88);
+    s2.setGrade("Физика", 90);
+    
+    s3.setGrade("Математика", 75);
+    s3.setGrade("Программирование", 95);
+    s3.setGrade("Физика", 82);
 
-    for (int i = 0; i < n; i++) {
-        cout << "Название группы " << (i + 1) << ": ";
-        string name;
-        getline(cin, name);
-        groups.emplace_back(name);
+    // Создаем группу и добавляем студентов
+    Group group("ИС-201");
+    group.addStudent(&s1);
+    group.addStudent(&s2);
+    group.addStudent(&s3);
+
+    // Выводим информацию о группе
+    cout << "Группа: " << group.getName() << endl;
+    cout << "Количество студентов: " << group.getStudentCount() << endl;
+    cout << "\nСредний балл группы по дисциплинам:" << endl;
+    cout << "Математика: " << group.getAverageGradeForDiscipline("Математика") << endl;
+    cout << "Программирование: " << group.getAverageGradeForDiscipline("Программирование") << endl;
+    cout << "Физика: " << group.getAverageGradeForDiscipline("Физика") << endl;
+
+    // Выводим информацию о студентах и их баллах
+    cout << "\nИнформация о студентах:" << endl;
+    for (size_t i = 0; i < group.getStudentCount(); i++) {
+        student* s = group.getStudent(i);
+        cout << "\nСтудент: " << s->getName() << endl;
+        cout << "Возраст: " << s->getAge() << endl;
+        cout << "Группа: " << s->getGroup() << endl;
+        cout << "Баллы:" << endl;
+        cout << "  Математика: " << s->getGrade("Математика") << endl;
+        cout << "  Программирование: " << s->getGrade("Программирование") << endl;
+        cout << "  Физика: " << s->getGrade("Физика") << endl;
+        cout << "Общий балл: " << s->getTotalGrade() << endl;
+        cout << "Средний балл: " << s->getAverageGrade() << endl;
     }
-
-    int choice;
-    do {
-        cout << "\n1. Добавить студента\n2. Показать группы\n3. Перевести студента\n0. Выход\nВыбор: ";
-        cin >> choice;
-        cin.ignore();
-
-        switch (choice) {
-            case 1: {
-                string name;
-                int age, groupNum;
-
-                cout << "Имя студента: ";
-                getline(cin, name);
-                cout << "Возраст: ";
-                cin >> age;
-
-                auto student = make_shared<Student>(name, age);
-                students.push_back(student);
-
-                cout << "Группы:\n";
-                for (size_t i = 0; i < groups.size(); i++) {
-                    cout << (i + 1) << ". " << groups[i].getName() << endl;
-                }
-
-                cout << "Номер группы: ";
-                cin >> groupNum;
-                cin.ignore();
-
-                if (groupNum >= 1 && groupNum <= static_cast<int>(groups.size())) {
-                    groups[groupNum - 1].addStudent(student);
-                    cout << "Студент добавлен" << endl;
-                }
-                break;
-            }
-            case 2:
-                for (const auto& group : groups) {
-                    group.displayStudents();
-                }
-                break;
-            case 3: {
-                if (groups.size() < 2) {
-                    cout << "Нужно минимум 2 группы" << endl;
-                    break;
-                }
-
-                cout << "Группы:\n";
-                for (size_t i = 0; i < groups.size(); i++) {
-                    cout << (i + 1) << ". " << groups[i].getName() << endl;
-                }
-
-                int fromGroup;
-                cout << "Из группы (номер): ";
-                cin >> fromGroup;
-                cin.ignore();
-
-                if (fromGroup < 1 || fromGroup > static_cast<int>(groups.size())) break;
-
-                groups[fromGroup - 1].displayStudents();
-
-                string studentName;
-                cout << "Имя студента: ";
-                getline(cin, studentName);
-
-                int toGroup;
-                cout << "В группу (номер): ";
-                cin >> toGroup;
-                cin.ignore();
-
-                if (toGroup < 1 || toGroup > static_cast<int>(groups.size())) break;
-
-                shared_ptr<Student> studentToMove = nullptr;
-                for (auto& student : students) {
-                    if (student->getName() == studentName && 
-                        student->getGroup() == groups[fromGroup - 1].getName()) {
-                        studentToMove = student;
-                        break;
-                    }
-                }
-
-                if (studentToMove) {
-                    groups[fromGroup - 1].removeStudent(studentName);
-                    groups[toGroup - 1].addStudent(studentToMove);
-                    cout << "Студент переведен" << endl;
-                }
-                break;
-            }
-        }
-    } while (choice != 0);
 
     return 0;
 }
