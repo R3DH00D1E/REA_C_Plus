@@ -3,7 +3,6 @@
 #include <vector>
 #include <memory>
 
-// Класс пользователя системы
 class User {
 private:
     std::string name;
@@ -21,7 +20,6 @@ public:
     }
 };
 
-// Базовый класс Документ
 class Document {
 protected:
     User author;
@@ -34,7 +32,6 @@ public:
 
     virtual ~Document() {}
 
-    // Геттеры
     User getAuthor() const {
         return author;
     }
@@ -47,7 +44,6 @@ public:
         return text;
     }
 
-    // Сеттеры
     void setTitle(const std::string& newTitle) {
         title = newTitle;
     }
@@ -56,7 +52,6 @@ public:
         text = newText;
     }
 
-    // Виртуальный метод для вывода информации о документе
     virtual void displayInfo() const {
         std::cout << "Документ: " << title << std::endl;
         std::cout << "Автор: " << author.getName() << std::endl;
@@ -64,7 +59,6 @@ public:
     }
 };
 
-// Класс Рабочий документ
 class WorkDocument : public Document {
 private:
     std::string department;
@@ -75,12 +69,10 @@ public:
                  const std::string& department)
         : Document(author, title, text), department(department) {}
 
-    // Добавление пользователя в рабочую группу
     void addToWorkGroup(const User& user) {
         workGroup.push_back(user);
     }
 
-    // Проверка, имеет ли пользователь доступ к документу
     bool hasAccess(const User& user) const {
         for (const auto& member : workGroup) {
             if (member.getId() == user.getId()) {
@@ -94,7 +86,6 @@ public:
         return department;
     }
 
-    // Переопределение метода для вывода информации
     void displayInfo() const override {
         Document::displayInfo();
         std::cout << "Отдел: " << department << std::endl;
@@ -105,7 +96,6 @@ public:
     }
 };
 
-// Класс Организационный документ
 class OrganizationalDocument : public Document {
 private:
     int number;
@@ -120,7 +110,6 @@ public:
         : Document(author, title, text), number(number), isEndorsed(false), isSigned(false),
           endorser(nullptr), signer(nullptr) {}
 
-    // Методы для визирования и подписания
     void endorse(User* user) {
         endorser = user;
         isEndorsed = true;
@@ -131,7 +120,6 @@ public:
         isSigned = true;
     }
 
-    // Геттеры
     int getNumber() const {
         return number;
     }
@@ -152,7 +140,6 @@ public:
         return signer;
     }
 
-    // Переопределение метода для вывода информации
     void displayInfo() const override {
         Document::displayInfo();
         std::cout << "Номер: " << number << std::endl;
@@ -168,22 +155,18 @@ public:
 };
 
 int main() {
-    // Создаем пользователей
     User user1("Иванов Иван", 1);
     User user2("Петров Петр", 2);
     User user3("Сидоров Сидор", 3);
 
-    // Создаем рабочий документ
     WorkDocument workDoc(user1, "Технический отчет", "Содержимое технического отчета", "ИТ-отдел");
     workDoc.addToWorkGroup(user1);
     workDoc.addToWorkGroup(user2);
 
-    // Создаем организационный документ
     OrganizationalDocument orgDoc(user1, "Приказ о премировании", "Премировать сотрудников...", 123);
     orgDoc.endorse(&user2);
     orgDoc.sign(&user3);
 
-    // Выводим информацию о документах
     std::cout << "=== Информация о рабочем документе ===" << std::endl;
     workDoc.displayInfo();
     std::cout << std::endl;
@@ -192,7 +175,6 @@ int main() {
     orgDoc.displayInfo();
     std::cout << std::endl;
 
-    // Проверяем доступ к рабочему документу
     std::cout << "Пользователь " << user2.getName() << (workDoc.hasAccess(user2) ? " имеет " : " не имеет ")
               << "доступ к рабочему документу." << std::endl;
     std::cout << "Пользователь " << user3.getName() << (workDoc.hasAccess(user3) ? " имеет " : " не имеет ")
