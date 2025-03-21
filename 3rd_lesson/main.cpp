@@ -53,9 +53,9 @@ public:
     }
 
     virtual void display() const {
-        std::cout << "Document: " << title << std::endl;
-        std::cout << "Author: " << author.getName() << std::endl;
-        std::cout << "Content: " << content << std::endl;
+        std::cout << "Документ: " << title << std::endl;
+        std::cout << "Автор: " << author.getName() << std::endl;
+        std::cout << "Содержание: " << content << std::endl;
     }
 };
 
@@ -88,8 +88,8 @@ public:
 
     void display() const override {
         Document::display();
-        std::cout << "Department: " << department << std::endl;
-        std::cout << "Access Group: " << std::endl;
+        std::cout << "Отдел: " << department << std::endl;
+        std::cout << "Группа доступа: " << std::endl;
         for (const auto& user : accessGroup) {
             std::cout << "- " << user.getName() << std::endl;
         }
@@ -142,14 +142,14 @@ public:
 
     void display() const override {
         Document::display();
-        std::cout << "Document Number: " << docNumber << std::endl;
-        std::cout << "Endorsement Status: " << (endorsed ? "Endorsed" : "Not Endorsed") << std::endl;
+        std::cout << "Номер документа: " << docNumber << std::endl;
+        std::cout << "Статус визирования: " << (endorsed ? "Визировано" : "Не визировано") << std::endl;
         if (endorsed && endorser != nullptr) {
-            std::cout << "Endorsed by: " << endorser->getName() << std::endl;
+            std::cout << "Визировал: " << endorser->getName() << std::endl;
         }
-        std::cout << "Signature Status: " <<  (sign ? "Signed" : "Not Signed") << std::endl;
+        std::cout << "Статус подписания: " <<  (sign ? "Подписано" : "Не подписано") << std::endl;
         if  (sign && signer != nullptr) {
-            std::cout << "Signed by: " << signer->getName() << std::endl;
+            std::cout << "Подписал: " << signer->getName() << std::endl;
         }
     }
 };
@@ -185,11 +185,11 @@ public:
             }
         }
         
-        std::cout << "\n=== Document Summary ===" << std::endl;
-        std::cout << "Total organizational documents: " << totalOrgDocs << std::endl;
-        std::cout << "Signed documents: " << signedDocs << std::endl;
-        std::cout << "Endorsed but not signed: " << endorsedButNotSigned << std::endl;
-        std::cout << "Waiting for endorsement: " << notEndorsed << std::endl;
+        std::cout << "\n=== Сводка по документам ===" << std::endl;
+        std::cout << "Всего организационных документов: " << totalOrgDocs << std::endl;
+        std::cout << "Подписанных документов: " << signedDocs << std::endl;
+        std::cout << "Визированных, но не подписанных: " << endorsedButNotSigned << std::endl;
+        std::cout << "Ожидающих визирования: " << notEndorsed << std::endl;
     }
     
     int getTotalDocuments() const {
@@ -202,22 +202,22 @@ public:
 };
 
 int main() {
-    User user1("John Smith", 1);
-    User user2("Robert Johnson", 2);
-    User user3("Emma Davis", 3);
+    User user1("Иванов Иван", 1);
+    User user2("Петров Петр", 2);
+    User user3("Сидорова Елена", 3);
 
-    auto workDoc = std::make_shared<WorkDocument>(user1, "Technical Report", "Technical report content...", "IT Department");
+    auto workDoc = std::make_shared<WorkDocument>(user1, "Технический отчет", "Содержимое технического отчета...", "ИТ-отдел");
     workDoc->addUserToAccessGroup(user1);
     workDoc->addUserToAccessGroup(user2);
 
-    auto orgDoc1 = std::make_shared<OrganizationalDocument>(user1, "Bonus Order", "All employees will receive a bonus...", 123);
+    auto orgDoc1 = std::make_shared<OrganizationalDocument>(user1, "Приказ о премировании", "Всем сотрудникам выплатить премию...", 123);
     orgDoc1->setEndorsement(&user2);
     orgDoc1->setSignature(&user3);
     
-    auto orgDoc2 = std::make_shared<OrganizationalDocument>(user2, "Vacation Policy", "New vacation policy...", 124);
+    auto orgDoc2 = std::make_shared<OrganizationalDocument>(user2, "Политика отпусков", "Новые правила предоставления отпусков...", 124);
     orgDoc2->setEndorsement(&user3);
     
-    auto orgDoc3 = std::make_shared<OrganizationalDocument>(user3, "Office Closure", "Office will be closed...", 125);
+    auto orgDoc3 = std::make_shared<OrganizationalDocument>(user3, "Закрытие офиса", "Офис будет закрыт на время каникул...", 125);
     
     DocumentManager docManager;
     docManager.addDocument(workDoc);
@@ -225,18 +225,18 @@ int main() {
     docManager.addDocument(orgDoc2);
     docManager.addDocument(orgDoc3);
 
-    std::cout << "=== Work Document Information ===" << std::endl;
+    std::cout << "=== Информация о рабочем документе ===" << std::endl;
     workDoc->display();
     std::cout << std::endl;
 
-    std::cout << "=== Organizational Document Information ===" << std::endl;
+    std::cout << "=== Информация об организационном документе ===" << std::endl;
     orgDoc1->display();
     std::cout << std::endl;
 
-    std::cout << "User " << user2.getName() << (workDoc->checkAccess(user2) ? " has " : " does not have ")
-              << "access to the work document." << std::endl;
-    std::cout << "User " << user3.getName() << (workDoc->checkAccess(user3) ? " has " : " does not have ")
-              << "access to the work document." << std::endl;
+    std::cout << "Пользователь " << user2.getName() << (workDoc->checkAccess(user2) ? " имеет " : " не имеет ")
+              << "доступ к рабочему документу." << std::endl;
+    std::cout << "Пользователь " << user3.getName() << (workDoc->checkAccess(user3) ? " имеет " : " не имеет ")
+              << "доступ к рабочему документу." << std::endl;
               
     docManager.displaySummary();
 
