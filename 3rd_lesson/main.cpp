@@ -154,31 +154,91 @@ public:
     }
 };
 
+class DocumentManager {
+private:
+    std::vector<std::shared_ptr<Document>> documents;
+    std::vector<std::shared_ptr<OrganizationalDocument>> orgDocuments;
+
+public:
+    void addDocument(std::shared_ptr<Document> doc) {
+        documents.push_back(doc);
+        
+        auto orgDoc = std::dynamic_pointer_cast<OrganizationalDocument>(doc);
+        if (orgDoc) {
+            orgDocuments.push_back(orgDoc);
+        }
+    }
+    
+    void displaySummary() const {
+        int totalOrgDocs = orgDocuments.size();
+        int signedDocs = 0;
+        int endorsedButNotSigned = 0;
+        int notEndorsed = 0;
+        
+        for (const auto& doc : orgDocuments) {
+            if (doc->isSigned()) {
+                signedDocs++;
+            } else if (doc->isEndorsed()) {
+                endorsedButNotSigned++;
+            } else {
+                notEndorsed++;
+            }
+        }
+        
+        std::cout << "\n=== Document Summary ===" << std::endl;
+        std::cout << "Total organizational documents: " << totalOrgDocs << std::endl;
+        std::cout << "Signed documents: " << signedDocs << std::endl;
+        std::cout << "Endorsed but not signed: " << endorsedButNotSigned << std::endl;
+        std::cout << "Waiting for endorsement: " << notEndorsed << std::endl;
+    }
+    
+    int getTotalDocuments() const {
+        return documents.size();
+    }
+    
+    int getTotalOrgDocuments() const {
+        return orgDocuments.size();
+    }
+};
+
 int main() {
     User user1("John Smith", 1);
     User user2("Robert Johnson", 2);
     User user3("Emma Davis", 3);
 
-    WorkDocument workDoc(user1, "Technical Report", "Technical report content...", "IT Department");
-    workDoc.addUserToAccessGroup(user1);
-    workDoc.addUserToAccessGroup(user2);
+    auto workDoc = std::make_shared<WorkDocument>(user1, "Technical Report", "Technical report content...", "IT Department");
+    workDoc->addUserToAccessGroup(user1);
+    workDoc->addUserToAccessGroup(user2);
 
-    OrganizationalDocument orgDoc(user1, "Bonus Order", "All employees will receive a bonus...", 123);
-    orgDoc.setEndorsement(&user2);
-    orgDoc.setSignature(&user3);
+    auto orgDoc1 = std::make_shared<OrganizationalDocument>(user1, "Bonus Order", "All employees will receive a bonus...", 123);
+    orgDoc1->setEndorsement(&user2);
+    orgDoc1->setSignature(&user3);
+    
+    auto orgDoc2 = std::make_shared<OrganizationalDocument>(user2, "Vacation Policy", "New vacation policy...", 124);
+    orgDoc2->setEndorsement(&user3);
+    
+    auto orgDoc3 = std::make_shared<OrganizationalDocument>(user3, "Office Closure", "Office will be closed...", 125);
+    
+    DocumentManager docManager;
+    docManager.addDocument(workDoc);
+    docManager.addDocument(orgDoc1);
+    docManager.addDocument(orgDoc2);
+    docManager.addDocument(orgDoc3);
 
     std::cout << "=== Work Document Information ===" << std::endl;
-    workDoc.display();
+    workDoc->display();
     std::cout << std::endl;
 
     std::cout << "=== Organizational Document Information ===" << std::endl;
-    orgDoc.display();
+    orgDoc1->display();
     std::cout << std::endl;
 
-    std::cout << "User " << user2.getName() << (workDoc.checkAccess(user2) ? " has " : " does not have ")
+    std::cout << "User " << user2.getName() << (workDoc->checkAccess(user2) ? " has " : " does not have ")
               << "access to the work document." << std::endl;
-    std::cout << "User " << user3.getName() << (workDoc.checkAccess(user3) ? " has " : " does not have ")
+    std::cout << "User " << user3.getName() << (workDoc->checkAccess(user3) ? " has " : " does not have ")
               << "access to the work document." << std::endl;
+              
+    docManager.displaySummary();
 
     return 0;
 }
