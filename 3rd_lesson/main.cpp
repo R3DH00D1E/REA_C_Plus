@@ -24,11 +24,11 @@ class Document {
 protected:
     User author;
     std::string title;
-    std::string text;
+    std::string content;
 
 public:
-    Document(const User& author, const std::string& title, const std::string& text)
-        : author(author), title(title), text(text) {}
+    Document(const User& author, const std::string& title, const std::string& content)
+        : author(author), title(title), content(content) {}
 
     virtual ~Document() {}
 
@@ -40,41 +40,41 @@ public:
         return title;
     }
 
-    std::string getText() const {
-        return text;
+    std::string getContent() const {
+        return content;
     }
 
     void setTitle(const std::string& newTitle) {
         title = newTitle;
     }
 
-    void setText(const std::string& newText) {
-        text = newText;
+    void setContent(const std::string& newContent) {
+        content = newContent;
     }
 
-    virtual void displayInfo() const {
-        std::cout << "Документ: " << title << std::endl;
-        std::cout << "Автор: " << author.getName() << std::endl;
-        std::cout << "Текст: " << text << std::endl;
+    virtual void display() const {
+        std::cout << "Document: " << title << std::endl;
+        std::cout << "Author: " << author.getName() << std::endl;
+        std::cout << "Content: " << content << std::endl;
     }
 };
 
 class WorkDocument : public Document {
 private:
     std::string department;
-    std::vector<User> workGroup;
+    std::vector<User> accessGroup;
 
 public:
-    WorkDocument(const User& author, const std::string& title, const std::string& text,
+    WorkDocument(const User& author, const std::string& title, const std::string& content,
                  const std::string& department)
-        : Document(author, title, text), department(department) {}
+        : Document(author, title, content), department(department) {}
 
-    void addToWorkGroup(const User& user) {
-        workGroup.push_back(user);
+    void addUserToAccessGroup(const User& user) {
+        accessGroup.push_back(user);
     }
 
-    bool hasAccess(const User& user) const {
-        for (const auto& member : workGroup) {
+    bool checkAccess(const User& user) const {
+        for (const auto& member : accessGroup) {
             if (member.getId() == user.getId()) {
                 return true;
             }
@@ -86,11 +86,11 @@ public:
         return department;
     }
 
-    void displayInfo() const override {
-        Document::displayInfo();
-        std::cout << "Отдел: " << department << std::endl;
-        std::cout << "Рабочая группа: " << std::endl;
-        for (const auto& user : workGroup) {
+    void display() const override {
+        Document::display();
+        std::cout << "Department: " << department << std::endl;
+        std::cout << "Access Group: " << std::endl;
+        for (const auto& user : accessGroup) {
             std::cout << "- " << user.getName() << std::endl;
         }
     }
@@ -98,38 +98,38 @@ public:
 
 class OrganizationalDocument : public Document {
 private:
-    int number;
-    bool isEndorsed;
-    bool isSigned;
+    int docNumber;
+    bool endorsed;
+    bool sign;
     User* endorser;
     User* signer;
 
 public:
-    OrganizationalDocument(const User& author, const std::string& title, const std::string& text,
-                           int number)
-        : Document(author, title, text), number(number), isEndorsed(false), isSigned(false),
+    OrganizationalDocument(const User& author, const std::string& title, const std::string& content,
+                           int docNumber)
+        : Document(author, title, content), docNumber(docNumber), endorsed(false), sign(false),
           endorser(nullptr), signer(nullptr) {}
 
-    void endorse(User* user) {
+    void setEndorsement(User* user) {
         endorser = user;
-        isEndorsed = true;
+        endorsed = true;
     }
 
-    void sign(User* user) {
+    void setSignature(User* user) {
         signer = user;
-        isSigned = true;
+     sign = true;
     }
 
-    int getNumber() const {
-        return number;
+    int getDocNumber() const {
+        return docNumber;
     }
 
-    bool getIsEndorsed() const {
-        return isEndorsed;
+    bool isEndorsed() const {
+        return endorsed;
     }
 
-    bool getIsSigned() const {
-        return isSigned;
+    bool isSigned() const {
+        return sign;
     }
 
     User* getEndorser() const {
@@ -140,45 +140,45 @@ public:
         return signer;
     }
 
-    void displayInfo() const override {
-        Document::displayInfo();
-        std::cout << "Номер: " << number << std::endl;
-        std::cout << "Статус визирования: " << (isEndorsed ? "Визировано" : "Не визировано") << std::endl;
-        if (isEndorsed && endorser != nullptr) {
-            std::cout << "Визировал: " << endorser->getName() << std::endl;
+    void display() const override {
+        Document::display();
+        std::cout << "Document Number: " << docNumber << std::endl;
+        std::cout << "Endorsement Status: " << (endorsed ? "Endorsed" : "Not Endorsed") << std::endl;
+        if (endorsed && endorser != nullptr) {
+            std::cout << "Endorsed by: " << endorser->getName() << std::endl;
         }
-        std::cout << "Статус подписания: " << (isSigned ? "Подписано" : "Не подписано") << std::endl;
-        if (isSigned && signer != nullptr) {
-            std::cout << "Подписал: " << signer->getName() << std::endl;
+        std::cout << "Signature Status: " <<  (sign ? "Signed" : "Not Signed") << std::endl;
+        if  (sign && signer != nullptr) {
+            std::cout << "Signed by: " << signer->getName() << std::endl;
         }
     }
 };
 
 int main() {
-    User user1("Иванов Иван", 1);
-    User user2("Петров Петр", 2);
-    User user3("Сидоров Сидор", 3);
+    User user1("John Smith", 1);
+    User user2("Robert Johnson", 2);
+    User user3("Emma Davis", 3);
 
-    WorkDocument workDoc(user1, "Технический отчет", "Содержимое технического отчета", "ИТ-отдел");
-    workDoc.addToWorkGroup(user1);
-    workDoc.addToWorkGroup(user2);
+    WorkDocument workDoc(user1, "Technical Report", "Technical report content...", "IT Department");
+    workDoc.addUserToAccessGroup(user1);
+    workDoc.addUserToAccessGroup(user2);
 
-    OrganizationalDocument orgDoc(user1, "Приказ о премировании", "Премировать сотрудников...", 123);
-    orgDoc.endorse(&user2);
-    orgDoc.sign(&user3);
+    OrganizationalDocument orgDoc(user1, "Bonus Order", "All employees will receive a bonus...", 123);
+    orgDoc.setEndorsement(&user2);
+    orgDoc.setSignature(&user3);
 
-    std::cout << "=== Информация о рабочем документе ===" << std::endl;
-    workDoc.displayInfo();
+    std::cout << "=== Work Document Information ===" << std::endl;
+    workDoc.display();
     std::cout << std::endl;
 
-    std::cout << "=== Информация об организационном документе ===" << std::endl;
-    orgDoc.displayInfo();
+    std::cout << "=== Organizational Document Information ===" << std::endl;
+    orgDoc.display();
     std::cout << std::endl;
 
-    std::cout << "Пользователь " << user2.getName() << (workDoc.hasAccess(user2) ? " имеет " : " не имеет ")
-              << "доступ к рабочему документу." << std::endl;
-    std::cout << "Пользователь " << user3.getName() << (workDoc.hasAccess(user3) ? " имеет " : " не имеет ")
-              << "доступ к рабочему документу." << std::endl;
+    std::cout << "User " << user2.getName() << (workDoc.checkAccess(user2) ? " has " : " does not have ")
+              << "access to the work document." << std::endl;
+    std::cout << "User " << user3.getName() << (workDoc.checkAccess(user3) ? " has " : " does not have ")
+              << "access to the work document." << std::endl;
 
     return 0;
 }
