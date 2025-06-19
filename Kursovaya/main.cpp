@@ -9,6 +9,7 @@
 #include <thread>
 #include <chrono>
 #include <limits>
+#include <windows.h>
 
 using namespace std;
 
@@ -16,7 +17,7 @@ using namespace std;
 class DataPacket {
 private:
     string content;
-    int size; // в байтах
+    int size;
     string sourceMac;
     string destinationMac;
 
@@ -30,7 +31,6 @@ public:
     string getDestinationMac() const { return destinationMac; }
 };
 
-// Базовый класс для сетевых устройств
 class NetworkDevice : public enable_shared_from_this<NetworkDevice> {
 protected:
     int id;
@@ -62,13 +62,12 @@ public:
     vector<shared_ptr<class NetworkConnection>> getConnections() const { return connections; }
 };
 
-// Класс сетевого соединения
 class NetworkConnection {
 private:
     weak_ptr<NetworkDevice> device1;
     weak_ptr<NetworkDevice> device2;
-    float bandwidth; // в Mbps
-    int latency;     // в ms
+    float bandwidth;
+    int latency;
     vector<shared_ptr<DataPacket>> packetQueue;
 
 public:
@@ -82,7 +81,6 @@ public:
         cout << "Пакет поставлен в очередь (" << bandwidth << "Мбит/с, " 
              << latency << "мс задержки): " << packet->getContent() << endl;
         
-        // Имитация задержки сети
         this_thread::sleep_for(chrono::milliseconds(latency));
         
         auto dev1 = this->device1.lock();
@@ -114,7 +112,6 @@ public:
     int getLatency() const { return latency; }
 };
 
-// Класс компьютера (конечного узла сети)
 class Computer : public NetworkDevice {
 private:
     string ipAddress;
@@ -156,7 +153,6 @@ public:
     string getIp() const { return ipAddress; }
 };
 
-// Класс сетевого коммутатора
 class Switch : public NetworkDevice {
 private:
     int portCount;
@@ -167,16 +163,13 @@ public:
         : NetworkDevice(id, name, mac), portCount(ports) {}
 
     void processPacket(shared_ptr<DataPacket> packet) override {
-        // Изучаем MAC-адрес источника
-        macTable[packet->getSourceMac()] = connections[0]; // Упрощенная логика
+        macTable[packet->getSourceMac()] = connections[0];
         
-        // Ищем MAC-адрес назначения в таблице
         auto it = macTable.find(packet->getDestinationMac());
         if (it != macTable.end()) {
             cout << name << " пересылает пакет на известный MAC: " << packet->getDestinationMac() << endl;
             it->second->transferPacket(packet, shared_from_this());
         } else {
-            // Flooding (отправка на все порты, кроме исходного)
             cout << name << " выполняет flooding (MAC " << packet->getDestinationMac() << " неизвестен)" << endl;
             for (auto& conn : connections) {
                 auto otherDev = conn->getOtherDevice(shared_from_this());
@@ -194,7 +187,6 @@ public:
     }
 };
 
-// Класс для управления сетью
 class NetworkManager {
 private:
     vector<shared_ptr<NetworkDevice>> devices;
@@ -292,12 +284,8 @@ public:
                  << ", Задержка: " << conn->getLatency() << "мс\n" << endl;
         }
     }
-
-    vector<shared_ptr<NetworkDevice>> getDevices() const { return devices; }
-    vector<shared_ptr<NetworkConnection>> getConnections() const { return connections; }
 };
 
-// Функция для безопасного ввода чисел
 template<typename T>
 T safeInput(const string& prompt = "") {
     T value;
@@ -315,7 +303,6 @@ T safeInput(const string& prompt = "") {
     }
 }
 
-// Главное меню
 void displayMenu() {
     cout << "\n=== Меню симулятора сети ===" << endl;
     cout << "1. Добавить устройство" << endl;
@@ -327,7 +314,10 @@ void displayMenu() {
 }
 
 int main() {
-    setlocale(LC_ALL, "ru_RU.UTF-8");
+    // Установка русской локали для Windows
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    
     NetworkManager nm;
 
     // Создаем тестовую сеть
@@ -357,12 +347,16 @@ int main() {
                     
                     int id = safeInput<int>("Введите ID устройства: ");
                     string name, mac;
-                    cout << "Введите имя устройства: "; getline(cin, name);
-                    cout << "Введите MAC-адрес: "; getline(cin, mac);
+                    cout << "Введите имя устройства: "; 
+                    getline(cin, name);
+                    if (name.empty()) getline(cin, name);
+                    cout << "Введите MAC-адрес: "; 
+                    getline(cin, mac);
                     
                     if (typeChoice == 1) {
                         string ip;
-                        cout << "Введите IP-адрес: "; getline(cin, ip);
+                        cout << "Введите IP-адрес: "; 
+                        getline(cin, ip);
                         nm.addDevice("Computer", id, name, mac, ip);
                     } else {
                         int ports = safeInput<int>("Введите количество портов: ");
@@ -391,7 +385,9 @@ int main() {
                     int srcId = safeInput<int>("Введите ID устройства-источника: ");
                     int destId = safeInput<int>("Введите ID устройства-назначения: ");
                     string content;
-                    cout << "Введите содержимое пакета: "; getline(cin, content);
+                    cout << "Введите содержимое пакета: "; 
+                    getline(cin, content);
+                    if (content.empty()) getline(cin, content);
                     
                     nm.sendPacket(srcId, destId, content);
                     break;
