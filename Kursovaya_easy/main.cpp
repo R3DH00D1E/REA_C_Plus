@@ -220,10 +220,8 @@ private:
     }
 
 public:
-    shared_ptr<NetworkDevice> addDevice(const string& type, int id, const string& name, 
-                                      const string& mac, const string& ip = "", int ports = 0) {
+    shared_ptr<NetworkDevice> addDevice(const string& type, int id, const string& name, const string& mac, const string& ip = "", int ports = 0) {
         cout << "Добавление устройства: " << name << " (ID: " << id << ")" << endl;
-        
         if (findDeviceById(id) != -1) {
             throw runtime_error("Устройство с таким ID уже существует");
         }
@@ -244,10 +242,8 @@ public:
 
     shared_ptr<NetworkConnection> connectDevices(int id1, int id2, float bw, int lat) {
         cout << "Создание соединения между устройствами " << id1 << " и " << id2 << endl;
-        
         int idx1 = findDeviceById(id1);
         int idx2 = findDeviceById(id2);
-        
         if (idx1 == -1 || idx2 == -1) {
             throw runtime_error("Одно или оба устройства не найдены");
         }
@@ -260,16 +256,13 @@ public:
         connections.push_back(conn);
         devices[idx1]->addConnection(conn);
         devices[idx2]->addConnection(conn);
-        
-        cout << "Соединение между " << devices[idx1]->getName() 
-             << " и " << devices[idx2]->getName() << " создано" << endl;
+        cout << "Соединение между " << devices[idx1]->getName() << " и " << devices[idx2]->getName() << " создано" << endl;
         return conn;
     }
 
     void sendPacket(int sourceId, int destId, const string& content) {
         int srcIdx = findDeviceById(sourceId);
         int dstIdx = findDeviceById(destId);
-        
         if (srcIdx == -1 || dstIdx == -1) {
             throw runtime_error("Устройство-источник или устройство-назначение не найдены");
         }
@@ -284,9 +277,7 @@ public:
 
     void displayNetwork() const {
         cout << "\n=== Обзор сети ===" << endl;
-        cout << "Устройств: " << devices.size() 
-             << "\nСоединений: " << connections.size() << "\n" << endl;
-        
+        cout << "Устройств: " << devices.size() << "\nСоединений: " << connections.size() << "\n" << endl;
         cout << "=== Устройства ===" << endl;
         for (const auto& dev : devices) {
             dev->displayInfo();
@@ -300,7 +291,6 @@ public:
                 // Проходим по всем устройствам и ищем те, которые связаны этим соединением
                 shared_ptr<NetworkDevice> dev1 = nullptr;
                 shared_ptr<NetworkDevice> dev2 = nullptr;
-                
                 for (const auto& device : devices) {
                     if (conn->connects(device)) {
                         if (!dev1) {
@@ -311,12 +301,8 @@ public:
                         }
                     }
                 }
-                
                 if (dev1 && dev2) {
-                    cout << dev1->getName() << " (" << dev1->getId() << ") <---> " 
-                         << dev2->getName() << " (" << dev2->getId() << ")"
-                         << "\nПропускная способность: " << conn->getBandwidth() << "Мбит/с"
-                         << ", Задержка: " << conn->getLatency() << "мс\n" << endl;
+                    cout << dev1->getName() << " (" << dev1->getId() << ") <---> " << dev2->getName() << " (" << dev2->getId() << ")" << "\nПропускная способность: " << conn->getBandwidth() << "Мбит/с" << ", Задержка: " << conn->getLatency() << "мс\n" << endl;
                 } else {
                     cout << "Соединение " << i << ": Ошибка - не найдены оба устройства" << endl;
                 }
@@ -354,30 +340,28 @@ void displayMenu() {
 }
 
 int main() {
-    // Установка UTF-8 кодировки для лучшей совместимости
+
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
-    
+
     cout << "Запуск симулятора сети..." << endl;
-    
+
     NetworkManager nm;
 
-    // Создаем тестовую сеть
     cout << "Создание тестовой сети..." << endl;
     try {
         cout << "Создание компьютера 1..." << endl;
         auto pc1 = nm.addDevice("Computer", 1, "Офисный ПК", "00:1A:1B:1C:1D:11", "192.168.1.1");
-        
+
         cout << "Создание компьютера 2..." << endl;
         auto pc2 = nm.addDevice("Computer", 2, "Ноутбук", "00:1A:1B:1C:1D:22", "192.168.1.2");
-        
+
         cout << "Создание коммутатора..." << endl;
         auto sw1 = nm.addDevice("Switch", 3, "Главный коммутатор", "00:1A:1B:1C:1D:33", "", 8);
 
         cout << "Создание соединений..." << endl;
         nm.connectDevices(1, 3, 100.0, 1);
         nm.connectDevices(2, 3, 100.0, 1);
-        
         cout << "Тестовая сеть успешно создана!" << endl;
     } catch (const exception& e) {
         cerr << "Ошибка инициализации: " << e.what() << endl;
@@ -398,27 +382,27 @@ int main() {
                     cout << "\nДобавить новое устройство" << endl;
                     cout << "1. Компьютер\n2. Коммутатор" << endl;
                     int typeChoice = safeInput<int>("Выберите тип устройства: ");
-                    
+
                     if (typeChoice != 1 && typeChoice != 2) {
                         cout << "Неверный выбор типа устройства!" << endl;
                         break;
                     }
-                    
+
                     int id = safeInput<int>("Введите ID устройства: ");
-                    
+
                     string name;
-                    cout << "Введите имя устройства: "; 
+                    cout << "Введите имя устройства: ";
                     cout.flush();
                     getline(cin, name);
-                    
+
                     string mac;
-                    cout << "Введите MAC-адрес: "; 
+                    cout << "Введите MAC-адрес: ";
                     cout.flush();
                     getline(cin, mac);
-                    
+
                     if (typeChoice == 1) {
                         string ip;
-                        cout << "Введите IP-адрес: "; 
+                        cout << "Введите IP-адрес: ";
                         cout.flush();
                         getline(cin, ip);
                         nm.addDevice("Computer", id, name, mac, ip);
@@ -432,12 +416,12 @@ int main() {
                 case 2: {
                     cout << "\nСоздать соединение" << endl;
                     nm.displayNetwork();
-                    
+
                     int id1 = safeInput<int>("Введите ID первого устройства: ");
                     int id2 = safeInput<int>("Введите ID второго устройства: ");
                     float bw = safeInput<float>("Введите пропускную способность (Мбит/с): ");
                     int lat = safeInput<int>("Введите задержку (мс): ");
-                    
+
                     nm.connectDevices(id1, id2, bw, lat);
                     cout << "Соединение успешно создано!" << endl;
                     break;
@@ -445,15 +429,12 @@ int main() {
                 case 3: {
                     cout << "\nОтправить пакет" << endl;
                     nm.displayNetwork();
-                    
                     int srcId = safeInput<int>("Введите ID устройства-источника: ");
                     int destId = safeInput<int>("Введите ID устройства-назначения: ");
-                    
                     string content;
                     cout << "Введите содержимое пакета: "; 
                     cout.flush();
                     getline(cin, content);
-                    
                     nm.sendPacket(srcId, destId, content);
                     break;
                 }

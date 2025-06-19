@@ -35,6 +35,8 @@ public:
     string getDestinationMac() const { return destinationMac; }
 };
 
+class NetworkConnection; // Forward declaration
+
 class NetworkDevice : public enable_shared_from_this<NetworkDevice> {
 protected:
     int id;
@@ -54,11 +56,8 @@ public:
 
     virtual void processPacket(shared_ptr<DataPacket> packet) = 0;
 
-    virtual void displayInfo() const {
-        std::cout << "[" << id << "] " << name 
-             << "\nMAC: " << macAddress
-             << "\nПодключений: " << connections.size() << std::endl;
-    }
+    // Объявляем метод, но определяем его после класса NetworkConnection
+    virtual void displayInfo() const;
 
     int getId() const { return id; }
     string getName() const { return name; }
@@ -729,4 +728,30 @@ int main() {
     }
 
     return 0;
+}
+
+// Теперь определяем метод displayInfo() после определения NetworkConnection
+void NetworkDevice::displayInfo() const {
+    cout << "[" << id << "] " << name 
+         << "\nMAC: " << macAddress;
+    
+    if (connections.empty()) {
+        cout << "\nПодключений: 0" << endl;
+    } else {
+        cout << "\nПодключений: " << connections.size() << " (ID: ";
+        vector<int> connectedIds;
+        
+        for (const auto& conn : connections) {
+            auto otherDevice = conn->getOtherDevice(const_pointer_cast<NetworkDevice>(shared_from_this()));
+            if (otherDevice) {
+                connectedIds.push_back(otherDevice->getId());
+            }
+        }
+        
+        for (size_t i = 0; i < connectedIds.size(); ++i) {
+            cout << connectedIds[i];
+            if (i < connectedIds.size() - 1) cout << ", ";
+        }
+        cout << ")" << endl;
+    }
 }
