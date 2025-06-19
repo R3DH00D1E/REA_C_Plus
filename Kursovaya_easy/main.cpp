@@ -15,7 +15,6 @@
 
 using namespace std;
 
-// Класс для представления сетевого пакета
 class DataPacket {
 private:
     string content;
@@ -53,9 +52,7 @@ public:
     virtual void processPacket(shared_ptr<DataPacket> packet) = 0;
 
     virtual void displayInfo() const {
-        cout << "[" << id << "] " << name 
-             << "\nMAC: " << macAddress
-             << "\nПодключений: " << connections.size() << endl;
+        cout << "[" << id << "] " << name << "\nMAC: " << macAddress << "\nПодключений: " << connections.size() << endl;
     }
 
     int getId() const { return id; }
@@ -73,21 +70,18 @@ private:
     vector<shared_ptr<DataPacket>> packetQueue;
 
 public:
-    NetworkConnection(shared_ptr<NetworkDevice> dev1, 
-                     shared_ptr<NetworkDevice> dev2, 
-                     float bw, int lat)
+    NetworkConnection(shared_ptr<NetworkDevice> dev1, shared_ptr<NetworkDevice> dev2, float bw, int lat)
         : device1(dev1), device2(dev2), bandwidth(bw), latency(lat) {}
 
     void transferPacket(shared_ptr<DataPacket> packet, shared_ptr<NetworkDevice> sender) {
         packetQueue.push_back(packet);
-        cout << "Пакет поставлен в очередь (" << bandwidth << "Мбит/с, " 
-             << latency << "мс задержки): " << packet->getContent() << endl;
-        
+        cout << "Пакет поставлен в очередь (" << bandwidth << "Мбит/с, " << latency << "мс задержки): " << packet->getContent() << endl;
+
         this_thread::sleep_for(chrono::milliseconds(latency));
-        
+
         auto dev1 = this->device1.lock();
         auto dev2 = this->device2.lock();
-        
+
         if (sender == dev1 && dev2) {
             dev2->processPacket(packet);
         } else if (sender == dev2 && dev1) {
@@ -104,7 +98,7 @@ public:
     shared_ptr<NetworkDevice> getOtherDevice(shared_ptr<NetworkDevice> dev) const {
         auto dev1 = this->device1.lock();
         auto dev2 = this->device2.lock();
-        
+
         if (dev == dev1) return dev2;
         if (dev == dev2) return dev1;
         return nullptr;
@@ -130,7 +124,7 @@ public:
         }
 
         auto packet = make_shared<DataPacket>(content, content.size(), macAddress, target->getMac());
-        
+
         for (auto& conn : connections) {
             if (conn->connects(target)) {
                 cout << name << " отправляет пакет на " << target->getName() << endl;
@@ -148,8 +142,7 @@ public:
 
     void displayInfo() const override {
         NetworkDevice::displayInfo();
-        cout << "IP: " << ipAddress 
-             << "\nПолучено пакетов: " << receivedPackets.size() << endl;
+        cout << "IP: " << ipAddress << "\nПолучено пакетов: " << receivedPackets.size() << endl;
     }
 
     string getIp() const { return ipAddress; }
@@ -166,7 +159,7 @@ public:
 
     void processPacket(shared_ptr<DataPacket> packet) override {
         macTable[packet->getSourceMac()] = connections[0];
-        
+
         auto it = macTable.find(packet->getDestinationMac());
         if (it != macTable.end()) {
             cout << name << " пересылает пакет на известный MAC: " << packet->getDestinationMac() << endl;
@@ -184,8 +177,7 @@ public:
 
     void displayInfo() const override {
         NetworkDevice::displayInfo();
-        cout << "Портов: " << portCount 
-             << "\nИзучено MAC-адресов: " << macTable.size() << endl;
+        cout << "Портов: " << portCount << "\nИзучено MAC-адресов: " << macTable.size() << endl;
     }
 };
 
@@ -202,16 +194,15 @@ private:
 
     bool connectionExists(int id1, int id2) const {
         for (const auto& conn : connections) {
-            // Получаем устройства из соединения более безопасным способом
             auto dev1_ptr = conn->getOtherDevice(nullptr);
             if (!dev1_ptr) continue;
-            
+
             auto dev2_ptr = conn->getOtherDevice(dev1_ptr);
             if (!dev2_ptr) continue;
-            
+
             int dev1_id = dev1_ptr->getId();
             int dev2_id = dev2_ptr->getId();
-            
+
             if ((dev1_id == id1 && dev2_id == id2) || (dev1_id == id2 && dev2_id == id1)) {
                 return true;
             }
@@ -432,7 +423,7 @@ int main() {
                     int srcId = safeInput<int>("Введите ID устройства-источника: ");
                     int destId = safeInput<int>("Введите ID устройства-назначения: ");
                     string content;
-                    cout << "Введите содержимое пакета: "; 
+                    cout << "Введите содержимое пакета: ";
                     cout.flush();
                     getline(cin, content);
                     nm.sendPacket(srcId, destId, content);
